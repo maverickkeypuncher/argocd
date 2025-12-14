@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: inventory-app
+spec:
+  strategy: 
+    type: RollingUpdate
+    rollingUpdate:
+     maxUnavailable: 0
+     maxSurge: 1
+  replicas: 5
+  selector:
+    matchLabels:
+      app: inventoryapp
+  template:
+    metadata:
+      labels:
+        app: inventoryapp
+    spec:
+      containers:
+      - name: inventoryapp
+        image: registry.local:5000/inventory-app:1.0
+        resources:
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
+        ports:
+        - containerPort: 7000
+        volumeMounts:
+        - name: inventory-volume
+          mountPath: /app/data
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 7000
+            scheme: HTTP
+          initialDelaySeconds: 10
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 7000
+            scheme: HTTP
+          initialDelaySeconds: 10
+          periodSeconds: 10
+      volumes:
+        - name: inventory-volume
+          persistentVolumeClaim: 
+            claimName: inventory-pvc
+
